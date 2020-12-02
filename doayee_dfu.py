@@ -44,12 +44,11 @@ class dfuTool(wx.Frame):
     def __init__(self, parent, title):
         super(dfuTool, self).__init__(parent, title=title)
 
-        self.baudrates = ['9600', '57600', '74880', '115200', '230400', '460800', '921600']
         self.SetSize(800,550)
         self.SetMinSize(wx.Size(800,500))
         self.Centre()
-        self.initUI()
         self.initFlags()
+        self.initUI()
         print('Doayee ESP32 Firmware Flasher')
         print('--------------------------------------------')
 
@@ -67,55 +66,16 @@ class dfuTool(wx.Frame):
         self.serialtext = wx.StaticText(self.serialPanel,label = "Serial Port:", style = wx.ALIGN_CENTRE)
         serialhbox.Add(self.serialtext,0.5,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
 
-        devices = self.list_serial_devices()
-        self.serialChoice = wx.Choice(self.serialPanel, choices=devices)
+        self.serialChoice = wx.Choice(self.serialPanel)
         self.serialChoice.Bind(wx.EVT_CHOICE, self.on_serial_list_select)
         serialhbox.Add(self.serialChoice,3,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
+        self.populate_serial_choice()
 
         self.scanButton = wx.Button(parent=self.serialPanel, label='Rescan Ports')
         self.scanButton.Bind(wx.EVT_BUTTON, self.on_serial_scan_request)
         serialhbox.Add(self.scanButton,2,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
 
-        self.serialAutoCheckbox = wx.CheckBox(parent=self.serialPanel,label="Auto-detect (slow)")
-        self.serialAutoCheckbox.Bind(wx.EVT_CHECKBOX,self.on_serial_autodetect_check)
-        serialhbox.Add(self.serialAutoCheckbox,2,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
-
         vbox.Add(self.serialPanel,1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-        ################################################################
-        #                   BEGIN BAUD RATE GUI                        #
-        ################################################################
-        self.baudPanel = wx.Panel(self.mainPanel)
-        baudhbox = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.baudtext = wx.StaticText(self.baudPanel,label = "Baud Rate:", style = wx.ALIGN_CENTRE)
-        baudhbox.Add(self.baudtext,0.5,wx.ALL,20)
-
-        # create a button for each baud rate
-        for index, baud in enumerate(self.baudrates):
-            # use the first button to initialise the group
-            style = wx.RB_GROUP if index == 0 else 0
-
-            baudChoice = wx.RadioButton(self.baudPanel,style=style,label=baud, name=baud)
-            baudChoice.Bind(wx.EVT_RADIOBUTTON, self.on_baud_selected)
-            baudChoice.baudrate = baud
-            baudhbox.Add(baudChoice, 1, wx.TOP | wx.BOTTOM |wx.EXPAND, 20)
-
-            # set the default up
-            if index == len(self.baudrates) - 1:
-                baudChoice.SetValue(True)
-                self.ESPTOOLARG_BAUD = baudChoice.baudrate
-
-        vbox.Add(self.baudPanel,1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-        ################################################################
-        #                   BEGIN ERASE BUTTON GUI                     #
-        ################################################################
-        self.eraseButton = wx.Button(parent=self.mainPanel, label='Erase ESP')
-        self.eraseButton.Bind(wx.EVT_BUTTON, self.on_erase_button)
-
-        self.eraseWarning= wx.StaticText(self.mainPanel,label = "WARNING: Erasing is not mandatory to flash a new app, but if you do, you must reflash ALL 3 files.", style = wx.ALIGN_LEFT)
-
-        vbox.Add(self.eraseButton,1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-        vbox.Add(self.eraseWarning,0.1,wx.BOTTOM|wx.LEFT|wx.RIGHT|wx.EXPAND, 20 )
         ################################################################
         #                   BEGIN APP DFU FILE GUI                     #
         ################################################################
@@ -196,16 +156,14 @@ class dfuTool(wx.Frame):
         self.partitionDFUpanel.SetSizer(partitionhbox)
         self.bootloaderDFUpanel.SetSizer(bootloaderhbox)
         self.serialPanel.SetSizer(serialhbox)
-        self.baudPanel.SetSizer(baudhbox)
         self.mainPanel.SetSizer(vbox)
 
     def initFlags(self):
         '''Initialises the flags used to control the program flow'''
         self.ESPTOOL_BUSY = False
 
-        self.ESPTOOLARG_AUTOSERIAL = False
-        self.ESPTOOLARG_SERIALPORT = self.serialChoice.GetString(self.serialChoice.GetSelection())
-        self.ESPTOOLARG_BAUD = self.ESPTOOLARG_BAUD # this default is regrettably loaded as part of the initUI process
+        self.ESPTOOLARG_SERIALPORT = 'Automatic'
+        self.ESPTOOLARG_BAUD = 921600 # this default is regrettably loaded as part of the initUI process
         self.ESPTOOLARG_APPPATH = None
         self.ESPTOOLARG_PARTITIONPATH = None
         self.ESPTOOLARG_BOOTLOADERPATH = None
@@ -217,56 +175,31 @@ class dfuTool(wx.Frame):
         self.PARTITIONFILE_SELECTED = False
         self.BOOTLOADERFILE_SELECTED = False
 
-        self.ESPTOOLMODE_ERASE = False
         self.ESPTOOLMODE_FLASH = False
-
-        self.ESPTOOL_ERASE_USED = False
 
     ################################################################
     #                      UI EVENT HANDLERS                       #
     ################################################################
     def on_serial_scan_request(self, event):
-        # disallow if automatic serial port is chosen
-        if self.ESPTOOLARG_AUTOSERIAL:
-            print('disable automatic mode first')
-            return
-
         # repopulate the serial port choices and update the selected port
         print('rescanning serial ports...')
+        self.populate_serial_choice()
+        print('serial choices updated')
+
+    def populate_serial_choice(self):
         devices = self.list_serial_devices()
+        devices.append('Automatic')
+
         self.serialChoice.Clear()
         for device in devices:
             self.serialChoice.Append(device)
-        self.ESPTOOLARG_SERIALPORT = self.serialChoice.GetString(self.serialChoice.GetSelection())
-        print('serial choices updated')
+            if device == self.ESPTOOLARG_SERIALPORT:
+                self.serialChoice.SetSelection(self.serialChoice.GetCount() - 1)
 
     def on_serial_list_select(self,event):
         port = self.serialChoice.GetString(self.serialChoice.GetSelection())
         self.ESPTOOLARG_SERIALPORT = self.serialChoice.GetString(self.serialChoice.GetSelection())
         print('you chose '+port)
-
-    def on_serial_autodetect_check(self,event):
-        self.ESPTOOLARG_AUTOSERIAL = self.serialAutoCheckbox.GetValue()
-
-        if self.ESPTOOLARG_AUTOSERIAL:
-            self.serialChoice.Clear()
-            self.serialChoice.Append('Automatic')
-        else:
-            self.on_serial_scan_request(event)
-
-    def on_baud_selected(self,event):
-        selection = event.GetEventObject()
-        self.ESPTOOLARG_BAUD = selection.baudrate
-        print('baud set to '+selection.baudrate)
-
-    def on_erase_button(self, event):
-        if self.ESPTOOL_BUSY:
-            print('currently busy')
-            return
-        self.ESPTOOLMODE_ERASE = True
-        self.ESPTOOL_ERASE_USED = True
-        t = threading.Thread(target=self.esptoolRunner, daemon=True)
-        t.start()
 
     def on_appFlash_check(self, event):
         self.ESPTOOLARG_APPFLASH = self.appDFUCheckbox.GetValue()
@@ -328,18 +261,6 @@ class dfuTool(wx.Frame):
             print('no bootloader selected for flash')
             return
         else:
-            # if the erase_flash has been used but we have not elected to upload all the required files
-            if self.ESPTOOL_ERASE_USED & (~self.ESPTOOLARG_APPFLASH | ~self.ESPTOOLARG_PARTITIONFLASH | ~self.ESPTOOLARG_BOOTLOADERFLASH):
-                dialog = wx.MessageDialog(self.mainPanel, 'DoayeeESP32DFU detected use of \"Erase ESP\", which means you should reflash all files. Are you sure you want to continue? ','Warning',wx.YES_NO|wx.ICON_EXCLAMATION)
-                ret = dialog.ShowModal()
-
-                if ret == wx.ID_NO:
-                    return
-
-            # if we're uploading everything, clear the fact that erase_flash has been used
-            if self.ESPTOOLARG_APPFLASH & self.ESPTOOLARG_PARTITIONFLASH & self.ESPTOOLARG_BOOTLOADERFLASH:
-                self.ESPTOOL_ERASE_USED = False
-
             self.ESPTOOLMODE_FLASH = True
             t = threading.Thread(target=self.esptoolRunner, daemon=True)
             t.start()
@@ -362,12 +283,10 @@ class dfuTool(wx.Frame):
         '''Build the command that we would give esptool on the CLI'''
         cmd = ['--baud',self.ESPTOOLARG_BAUD]
 
-        if self.ESPTOOLARG_AUTOSERIAL == False:
+        if self.ESPTOOLARG_SERIALPORT != 'Automatic':
             cmd = cmd + ['--port',self.ESPTOOLARG_SERIALPORT]
 
-        if self.ESPTOOLMODE_ERASE:
-            cmd.append('erase_flash')
-        elif self.ESPTOOLMODE_FLASH:
+        if self.ESPTOOLMODE_FLASH:
             cmd.append('write_flash')
             if self.ESPTOOLARG_BOOTLOADERFLASH:
                 cmd.append('0x1000')
@@ -400,7 +319,6 @@ class dfuTool(wx.Frame):
             pass
 
         self.ESPTOOL_BUSY = False
-        self.ESPTOOLMODE_ERASE = False
         self.ESPTOOLMODE_FLASH = False
 
 
