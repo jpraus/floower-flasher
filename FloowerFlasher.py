@@ -258,13 +258,19 @@ class FloowerUpgrader(Frame):
         self.buttonFlash["state"] = "enabled"
 
 
+def resourcePath(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+
 def main():
     global window
 
     window = Tk()
     window.title("Floower Upgrader")
     window.geometry('500x500')
-    window.iconbitmap('logo.ico')
+    window.iconbitmap(resourcePath('logo.ico'))
     app = FloowerUpgrader()
     app.pack(padx=10, pady=10)
     window.mainloop()
