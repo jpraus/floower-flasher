@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['FloowerFlasher.py'],
-             pathex=['/Users/Tom/Documents/GitRepos/Doayee-dev/esp32bta/dfu'],
+             pathex=['c:\\Users\\Georgus\\Documents\\Projects\\tulip2\\floower-flasher'],
              binaries=[],
              datas=[],
              hiddenimports=[],
