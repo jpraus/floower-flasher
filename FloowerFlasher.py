@@ -264,6 +264,7 @@ def main():
     window = Tk()
     window.title("Floower Upgrader")
     window.geometry('500x500')
+    window.iconbitmap('logo.ico')
     app = FloowerUpgrader()
     app.pack(padx=10, pady=10)
     window.mainloop()
