@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['doayee_dfu.py'],
+a = Analysis(['FloowerFlasher.py'],
              pathex=['/Users/Tom/Documents/GitRepos/Doayee-dev/esp32bta/dfu'],
              binaries=[],
              datas=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='DoayeeESP32DFU',
+          name='Floower Flasher',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -31,9 +31,9 @@ exe = EXE(pyz,
           runtime_tmpdir=None,
           console=False , icon='logo.ico')
 app = BUNDLE(exe,
-             name='DoayeeESP32DFU.app',
+             name='FloowerFlasher.app',
              icon='logo.png.icns',
-             bundle_identifier='com.doayee.esp32dfu',
+             bundle_identifier='com.jiripraus.floowerFlasher',
              info_plist={
             'NSHighResolutionCapable': 'True'
             },)

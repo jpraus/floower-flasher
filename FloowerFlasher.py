@@ -1,18 +1,13 @@
-import wx
-import sys
 import threading
 import serial.tools.list_ports
 import os
 import esptool
 import webbrowser
 from tkinter import *
-from tkinter import font
 from tkinter import filedialog
 from tkinter.ttk import *
 
-from serial import SerialException
-from esptool import FatalError
-import argparse
+global window
 
 # this class credit marcelstoer
 # See discussion at http://stackoverflow.com/q/41101897/131929
@@ -36,7 +31,10 @@ class RedirectText:
             self.pending_backspace -= 1
             self.out.delete("1.0", END)
 
-        self.out.insert(END, new_string)
+        new_string = new_string.strip()
+        if len(new_string) > 0:
+            self.out.insert(END, new_string)
+            self.out.insert(END, "\n") # ugly esptool log hack
 
         self.out.see("end")
         self.out.configure(state=DISABLED)
@@ -122,7 +120,7 @@ class FloowerUpgrader(Frame):
         consoleFrame.columnconfigure(0, weight=1)
         consoleFrame.rowconfigure(0, weight=1)
 
-        console = Text(consoleFrame, state=DISABLED)
+        console = Text(consoleFrame, state=DISABLED, wrap="none")
         console.grid(row=0, column=0, sticky=E + W + S + N)
         sys.stdout = RedirectText(console)
         consoleScrollbar = Scrollbar(consoleFrame, command=console.yview)
@@ -146,96 +144,6 @@ class FloowerUpgrader(Frame):
         imgLabel = Label(self, image=photo)
         imgLabel.pack(side=RIGHT)
 
-        area = Text(self)
-        area.grid(row=1, column=0, columnspan=2, rowspan=4, padx=5, sticky=E + W + S + N)
-
-        abtn = Button(self, text="Activate")
-        abtn.grid(row=1, column=3)
-
-        cbtn = Button(self, text="Close")
-        cbtn.grid(row=2, column=3, pady=4)
-
-        hbtn = Button(self, text="Help")
-        hbtn.grid(row=5, column=0, padx=5)
-
-        obtn = Button(self, text="OK")
-        obtn.grid(row=5, column=3)
-
-
-        self.mainPanel = wx.Panel(self)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        ################################################################
-        #                   BEGIN APP DFU FILE GUI                     #
-        ################################################################
-        self.appDFUpanel = wx.Panel(self.mainPanel)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.firmwareText = wx.StaticText(self.appDFUpanel, label="Flooware File:", style=wx.ALIGN_LEFT)
-        hbox.Add(self.firmwareText, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.appPathText = wx.TextCtrl(self.appDFUpanel, style=wx.TE_READONLY)
-        self.appPathText.SetBackgroundColour('white')
-        hbox.Add(self.appPathText,5,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
-
-        self.browseButton = wx.Button(parent=self.appDFUpanel, label='Browse...')
-        self.browseButton.Bind(wx.EVT_BUTTON, self.on_app_browse_button)
-        hbox.Add(self.browseButton, 1, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        vbox.Add(self.appDFUpanel, 1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-        ################################################################
-        #                   BEGIN SERIAL OPTIONS GUI                   #
-        ################################################################
-        self.serialPanel = wx.Panel(self.mainPanel)
-        serialhbox = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.serialtext = wx.StaticText(self.serialPanel,label = "Serial Port:", style = wx.ALIGN_LEFT)
-        serialhbox.Add(self.serialtext,1,wx.ALL|wx.ALIGN_CENTER_VERTICAL,0)
-
-        self.serialChoice = wx.Choice(self.serialPanel)
-        self.serialChoice.Bind(wx.EVT_CHOICE, self.on_serial_list_select)
-        serialhbox.Add(self.serialChoice,5,wx.ALL|wx.ALIGN_CENTER_VERTICAL,20)
-        self.populate_serial_choice()
-
-        w = Combobox(self, values=['GB', 'UK'])
-        w.pack();
-
-        self.scanButton = wx.Button(parent=self.serialPanel, label='Rescan Ports')
-        self.scanButton.Bind(wx.EVT_BUTTON, self.on_serial_scan_request)
-        serialhbox.Add(self.scanButton,1,wx.ALL|wx.ALIGN_CENTER_VERTICAL,0)
-
-        vbox.Add(self.serialPanel,1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-
-        ################################################################
-        #                   BEGIN FLASH BUTTON GUI                     #
-        ################################################################
-        self.actionPanel = wx.Panel(self.mainPanel)
-        abox = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.buttonFlash = wx.Button(parent=self.actionPanel, label='Upgrade')
-        self.buttonFlash.Bind(wx.EVT_BUTTON, self.on_flash_button)
-        abox.Add(self.buttonFlash, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 10)
-
-        self.browseButton = wx.Button(parent=self.actionPanel, label='Browse...')
-        self.browseButton.Bind(wx.EVT_BUTTON, self.on_app_browse_button)
-        abox.Add(self.browseButton, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 10)
-
-        vbox.Add(self.actionPanel, 1, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
-        ################################################################
-        #                   BEGIN CONSOLE OUTPUT GUI                   #
-        ################################################################
-        self.consolePanel = wx.TextCtrl(self.mainPanel, style=wx.TE_MULTILINE|wx.TE_READONLY)
-        self.consolePanel.SetBackgroundColour('black')
-        self.consolePanel.SetForegroundColour('white')
-        sys.stdout = RedirectText(self.consolePanel)
-
-        vbox.Add(self.consolePanel, 5, wx.ALL|wx.EXPAND, 20)
-        ################################################################
-        #                ASSOCIATE PANELS TO SIZERS                    #
-        ################################################################
-        self.appDFUpanel.SetSizer(hbox)
-        self.serialPanel.SetSizer(serialhbox)
-        self.actionPanel.SetSizer(abox)
-        self.mainPanel.SetSizer(vbox)
 
     ################################################################
     #                      UI EVENT HANDLERS                       #
@@ -269,7 +177,8 @@ class FloowerUpgrader(Frame):
             self.buttonFlash["state"] = "enabled"
 
     def onClose(self):
-        self.buttonFlash["state"] = "disabled"
+        global window
+        window.destroy()
 
     def onFlash(self):
         if self.ESPTOOL_BUSY:
@@ -350,18 +259,14 @@ class FloowerUpgrader(Frame):
 
 
 def main():
+    global window
+
     window = Tk()
     window.title("Floower Upgrader")
     window.geometry('500x500')
     app = FloowerUpgrader()
     app.pack(padx=10, pady=10)
     window.mainloop()
-
-    #app = wx.App()
-    #window = dfuTool(None, title='Floower Upgrader')
-    #window.Show()
-
-    #app.MainLoop()
 
 if __name__ == '__main__':
     main()
