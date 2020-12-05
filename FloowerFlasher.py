@@ -76,7 +76,6 @@ class FloowerUpgrader(Frame):
         '''Runs on application start to build the GUI'''
 
         self.master.title("Floower Upgrader")
-        #self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
