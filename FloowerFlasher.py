@@ -89,7 +89,7 @@ class FloowerUpgrader(Frame):
         ################################################################
         labelFirmware = Label(mainFrame, text="Flooware File:", background=self.backgroundColor)
         labelFirmware.grid(row=0, column=0, sticky=W)
-        firmwareFilenameEntry = Entry(mainFrame, textvariable=self.firmwareFilename, background=self.backgroundColor, state="readonly")
+        firmwareFilenameEntry = Entry(mainFrame, textvariable=self.firmwareFilename, state="readonly")
         firmwareFilenameEntry.grid(row=0, column=1, sticky=E + W + S + N, padx=10)
         self.buttonBrowse = ttk.Button(mainFrame, text="Browse", command=self.onBrowseFile, width=10)
         self.buttonBrowse.grid(row=0, column=2, sticky=E + W + S + N)
@@ -153,7 +153,7 @@ class FloowerUpgrader(Frame):
         self.image = Image.open(resourcePath('floower.jpg'))
         self.image = self.image.resize((250, 450))
         self.photo = ImageTk.PhotoImage(self.image)
-        canvas = Canvas(self, width=self.image.size[0], height=self.image.size[1])
+        canvas = Canvas(self, width=self.image.size[0], height=self.image.size[1], background=self.backgroundColor)
         canvas.grid(row=0, column=0, sticky=E + W + S + N)
         canvas.create_image(0, 0, anchor=NW, image=self.photo)
 
@@ -286,7 +286,6 @@ def main():
     window.title("Floower Upgrader")
     window.geometry('750x500')
     window.iconbitmap(resourcePath('logo.ico'))
-    #window.configure(background="white")
     app = FloowerUpgrader()
     app.pack(fill=BOTH, expand=True)
     window.mainloop()
