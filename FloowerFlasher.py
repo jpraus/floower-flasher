@@ -3,9 +3,11 @@ import serial.tools.list_ports
 import os
 import esptool
 import webbrowser
+import sys
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
+from PIL import ImageTk, Image
 
 global window
 
@@ -74,13 +76,14 @@ class FloowerUpgrader(Frame):
         '''Runs on application start to build the GUI'''
 
         self.master.title("Floower Upgrader")
-        self.columnconfigure(0, weight=1)
+        #self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
         mainFrame = Frame(self, background=self.backgroundColor)
         mainFrame.columnconfigure(1, weight=1)
         mainFrame.rowconfigure(4, weight=1)
-        mainFrame.grid(row=0, column=0, sticky=E + W + S + N, padx=10, pady=10)
+        mainFrame.grid(row=0, column=1, sticky=E + W + S + N, padx=10, pady=10)
 
         ################################################################
         #                      FIRMWARE FILE NAME                      #
@@ -134,7 +137,7 @@ class FloowerUpgrader(Frame):
         #                   ACTION BUTTONS                             #
         ################################################################
         bottomFrame = Frame(self, background=self.toolbarColor)
-        bottomFrame.grid(row=1, column=0, sticky=E + W + S + N)
+        bottomFrame.grid(row=1, column=0, columnspan=2, sticky=E + W + S + N)
         bottomFrame.columnconfigure(1, weight=1)
 
         self.buttonClose = ttk.Button(bottomFrame, text="Close", command=self.onClose, width=10)
@@ -145,12 +148,15 @@ class FloowerUpgrader(Frame):
         self.buttonFlash = ttk.Button(bottomFrame, text="Upgrade", command=self.onFlash, state="disabled", width=10)
         self.buttonFlash.grid(row=5, column=2, sticky=E + W + S + N, padx=15, pady=15)
 
-
-        return
-
-        photo = PhotoImage(file="cat.png")
-        imgLabel = Label(self, image=photo)
-        imgLabel.pack(side=RIGHT)
+        ################################################################
+        #                   IMAGE                                      #
+        ################################################################
+        self.image = Image.open(resourcePath('floower.jpg'))
+        self.image = self.image.resize((250, 450))
+        self.photo = ImageTk.PhotoImage(self.image)
+        canvas = Canvas(self, width=self.image.size[0], height=self.image.size[1])
+        canvas.grid(row=0, column=0, sticky=E + W + S + N)
+        canvas.create_image(0, 0, anchor=NW, image=self.photo)
 
 
     ################################################################
@@ -279,7 +285,7 @@ def main():
 
     window = Tk()
     window.title("Floower Upgrader")
-    window.geometry('500x500')
+    window.geometry('750x500')
     window.iconbitmap(resourcePath('logo.ico'))
     #window.configure(background="white")
     app = FloowerUpgrader()
