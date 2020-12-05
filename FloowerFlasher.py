@@ -5,7 +5,7 @@ import esptool
 import webbrowser
 from tkinter import *
 from tkinter import filedialog
-from tkinter.ttk import *
+from tkinter import ttk
 
 global window
 
@@ -31,10 +31,7 @@ class RedirectText:
             self.pending_backspace -= 1
             self.out.delete("1.0", END)
 
-        new_string = new_string.strip()
-        if len(new_string) > 0:
-            self.out.insert(END, new_string)
-            self.out.insert(END, "\n") # ugly esptool log hack
+        self.out.insert(END, new_string)
 
         self.out.see("end")
         self.out.configure(state=DISABLED)
@@ -45,15 +42,22 @@ class RedirectText:
 
 class FloowerUpgrader(Frame):
 
+    backgroundColor = "#ffffff"
+    toolbarColor = "#eeeeee"
+    borderColor = "#cccccc"
+
     ################################################################
     #                         INIT TASKS                           #
     ################################################################
     def __init__(self):
         super().__init__()
 
+        self.configure(background=self.backgroundColor)
         self.firmwareFilename = StringVar()
         self.initFlags()
         self.initUI()
+
+        self.labelStatusValue.config(text="Select Flooware File")
 
     def initFlags(self):
         '''Initialises the flags used to control the program flow'''
@@ -70,57 +74,56 @@ class FloowerUpgrader(Frame):
         '''Runs on application start to build the GUI'''
 
         self.master.title("Floower Upgrader")
-        self.pack(fill=BOTH, expand=True)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
-        #self.columnconfigure(0, pad=20)
-        self.columnconfigure(1, weight=1)
-        #self.columnconfigure(2, pad=20)
-        self.rowconfigure(4, weight=1)
-        #self.rowconfigure(0, pad=10)
-        #self.rowconfigure(1, pad=10)
+        mainFrame = Frame(self, background=self.backgroundColor)
+        mainFrame.columnconfigure(1, weight=1)
+        mainFrame.rowconfigure(4, weight=1)
+        mainFrame.grid(row=0, column=0, sticky=E + W + S + N, padx=10, pady=10)
 
         ################################################################
         #                      FIRMWARE FILE NAME                      #
         ################################################################
-        labelFirmware = Label(self, text="Flooware File:")
+        labelFirmware = Label(mainFrame, text="Flooware File:", background=self.backgroundColor)
         labelFirmware.grid(row=0, column=0, sticky=W)
-        firmwareFilenameEntry = Entry(self, textvariable=self.firmwareFilename, background="white", state="readonly")
+        firmwareFilenameEntry = Entry(mainFrame, textvariable=self.firmwareFilename, background=self.backgroundColor, state="readonly")
         firmwareFilenameEntry.grid(row=0, column=1, sticky=E + W + S + N, padx=10)
-        self.buttonBrowse = Button(self, text="Browse", command=self.onBrowseFile)
+        self.buttonBrowse = ttk.Button(mainFrame, text="Browse", command=self.onBrowseFile, width=10)
         self.buttonBrowse.grid(row=0, column=2, sticky=E + W + S + N)
-        labelDownloadLatest = Label(self, text="Download the latest version", foreground="blue", cursor="hand2")
+        labelDownloadLatest = Label(mainFrame, text="Download the latest version", foreground="blue", cursor="hand2", background=self.backgroundColor)
         labelDownloadLatest.grid(row=1, column=1, sticky=W, padx=8)
         labelDownloadLatest.bind("<Button-1>", lambda e: webbrowser.open_new('https://floower.io/flooware'))
 
         ################################################################
         #                      SERIAL PORT                             #
         ################################################################
-        labelSerial = Label(self, text="Serial Port:")
+        labelSerial = Label(mainFrame, text="Serial Port:", background=self.backgroundColor)
         labelSerial.grid(row=2, column=0, sticky=W)
-        self.serialPortsCombo = Combobox(self, state="readonly")
+        self.serialPortsCombo = ttk.Combobox(mainFrame, state="readonly")
         self.serialPortsCombo.grid(row=2, column=1, sticky=E + W + S + N, pady=5, padx=10)
         self.serialPortsCombo.bind("<<ComboboxSelected>>", self.onSerialPortSelect)
         self.updateSerialPortsValues()
-        self.buttonRescan = Button(self, text="Rescan", command=self.onSerialScan)
+        self.buttonRescan = ttk.Button(mainFrame, text="Rescan", command=self.onSerialScan, width=10)
         self.buttonRescan.grid(row=2, column=2, sticky=E + W + S + N, pady=4)
 
         ################################################################
         #                      STATUS LABEL                            #
         ################################################################
-        labelStatus = Label(self, text="Status:")
+        labelStatus = Label(mainFrame, text="Status:", background=self.backgroundColor)
         labelStatus.grid(row=3, column=0, sticky=W)
-        labelStatusValue = Label(self, text="Ready", font='Helvetica 12 bold', justify=LEFT)
-        labelStatusValue.grid(row=3, column=1, pady=10, sticky=W, padx=8)
+        self.labelStatusValue = Label(mainFrame, font='Helvetica 12 bold', justify=LEFT, background=self.backgroundColor)
+        self.labelStatusValue.grid(row=3, column=1, pady=10, sticky=W, padx=8)
 
         ################################################################
         #                   BEGIN CONSOLE OUTPUT GUI                   #
         ################################################################
-        consoleFrame = Frame(self)
+        consoleFrame = Frame(mainFrame)
         consoleFrame.grid(row=4, column=0, columnspan=3, pady=10, sticky=E + W + S + N)
         consoleFrame.columnconfigure(0, weight=1)
         consoleFrame.rowconfigure(0, weight=1)
 
-        console = Text(consoleFrame, state=DISABLED, wrap="none")
+        console = Text(consoleFrame, state=DISABLED)
         console.grid(row=0, column=0, sticky=E + W + S + N)
         sys.stdout = RedirectText(console)
         consoleScrollbar = Scrollbar(consoleFrame, command=console.yview)
@@ -130,13 +133,18 @@ class FloowerUpgrader(Frame):
         ################################################################
         #                   ACTION BUTTONS                             #
         ################################################################
-        self.buttonClose = Button(self, text="Close", command=self.onClose)
-        self.buttonClose.grid(row=5, column=0, sticky=E + W + S + N, pady=4)
-        labelHelp = Label(self, text="Help me", foreground="blue", cursor="hand2")
-        labelHelp.grid(row=5, column=1, sticky=E, padx=8)
+        bottomFrame = Frame(self, background=self.toolbarColor)
+        bottomFrame.grid(row=1, column=0, sticky=E + W + S + N)
+        bottomFrame.columnconfigure(1, weight=1)
+
+        self.buttonClose = ttk.Button(bottomFrame, text="Close", command=self.onClose, width=10)
+        self.buttonClose.grid(row=5, column=0, sticky=E + W + S + N, padx=15, pady=15)
+        labelHelp = Label(bottomFrame, text="Help me", foreground="blue", cursor="hand2", background=self.toolbarColor)
+        labelHelp.grid(row=5, column=1, sticky=E)
         labelHelp.bind("<Button-1>", lambda e: webbrowser.open_new('https://floower.io/'))
-        self.buttonFlash = Button(self, text="Upgrade", command=self.onFlash, state="disabled")
-        self.buttonFlash.grid(row=5, column=2, sticky=E + W + S + N, pady=4)
+        self.buttonFlash = ttk.Button(bottomFrame, text="Upgrade", command=self.onFlash, state="disabled", width=10)
+        self.buttonFlash.grid(row=5, column=2, sticky=E + W + S + N, padx=15, pady=15)
+
 
         return
 
@@ -173,8 +181,8 @@ class FloowerUpgrader(Frame):
             self.APPFILE_SELECTED = True
             self.firmwareFilename.set(os.path.basename(filename))
             self.ESPTOOLARG_APPPATH = os.path.abspath(filename)
-            print(self.ESPTOOLARG_APPPATH)
-            self.buttonFlash["state"] = "enabled"
+            self.labelStatusValue.config(text="Ready to Upgrade")
+            self.buttonFlash["state"] = "normale"
 
     def onClose(self):
         global window
@@ -237,6 +245,7 @@ class FloowerUpgrader(Frame):
         '''Handles the interaction with esptool'''
         self.ESPTOOL_BUSY = True
         self.disableUI()
+        self.labelStatusValue.config(text="Upgrading ...")
 
         cmd = self.esptool_cmd_builder()
         try:
@@ -256,6 +265,7 @@ class FloowerUpgrader(Frame):
         self.ESPTOOL_BUSY = False
         self.enableUI()
         self.buttonFlash["state"] = "enabled"
+        self.labelStatusValue.config(text="Done")
 
 
 def resourcePath(relative_path):
@@ -271,8 +281,9 @@ def main():
     window.title("Floower Upgrader")
     window.geometry('500x500')
     window.iconbitmap(resourcePath('logo.ico'))
+    #window.configure(background="white")
     app = FloowerUpgrader()
-    app.pack(padx=10, pady=10)
+    app.pack(fill=BOTH, expand=True)
     window.mainloop()
 
 if __name__ == '__main__':
