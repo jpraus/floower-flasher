@@ -4,6 +4,8 @@ import os
 import esptool
 import webbrowser
 import sys
+from sys import platform
+import tkinter as tk
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -43,7 +45,6 @@ class RedirectText:
         None
 
 class FloowerUpgrader(Frame):
-
     backgroundColor = "#ffffff"
     toolbarColor = "#eeeeee"
     borderColor = "#cccccc"
@@ -285,10 +286,17 @@ def main():
     window = Tk()
     window.title("Floower Upgrader")
     window.geometry('750x500')
-    window.iconbitmap(resourcePath('logo.ico'))
+
+    if platform == "darwin":
+        icon = tk.Image("photo", file=resourcePath('icon-macos.png'))
+        window.iconphoto(True, icon)
+    elif platform == "win32":
+        window.iconbitmap(resourcePath('logo.ico'))
+
     app = FloowerUpgrader()
     app.pack(fill=BOTH, expand=True)
     window.mainloop()
+
 
 if __name__ == '__main__':
     main()
