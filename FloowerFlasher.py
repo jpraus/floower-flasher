@@ -281,14 +281,14 @@ def resourcePath(relative_path):
 
 
 def main():
-    global window
+    global window, icon
 
     window = Tk()
     window.title("Floower Upgrader")
     window.geometry('750x500')
 
     if platform == "darwin":
-        icon = tk.Image("photo", file=resourcePath('icon-macos.png'))
+        icon = ImageTk.PhotoImage(file=resourcePath('icon-macos.png'))
         window.iconphoto(True, icon)
     elif platform == "win32":
         window.iconbitmap(resourcePath('logo.ico'))
