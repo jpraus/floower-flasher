@@ -96,7 +96,7 @@ class FloowerUpgrader(Frame):
         self.buttonBrowse.grid(row=0, column=2, sticky=E + W + S + N)
         labelDownloadLatest = Label(mainFrame, text="Download the latest version", foreground="blue", cursor="hand2", background=self.backgroundColor)
         labelDownloadLatest.grid(row=1, column=1, sticky=W, padx=8)
-        labelDownloadLatest.bind("<Button-1>", lambda e: webbrowser.open_new('https://floower.io/flooware'))
+        labelDownloadLatest.bind("<Button-1>", lambda e: webbrowser.open_new('https://floower.io/upgrading-floower/#latest'))
 
         ################################################################
         #                      SERIAL PORT                             #
@@ -144,7 +144,7 @@ class FloowerUpgrader(Frame):
         self.buttonClose.grid(row=5, column=0, sticky=E + W + S + N, padx=15, pady=15)
         labelHelp = Label(bottomFrame, text="Help me", foreground="blue", cursor="hand2", background=self.toolbarColor)
         labelHelp.grid(row=5, column=1, sticky=E)
-        labelHelp.bind("<Button-1>", lambda e: webbrowser.open_new('https://floower.io/'))
+        labelHelp.bind("<Button-1>", lambda e: self.onHelp())
         self.buttonFlash = ttk.Button(bottomFrame, text="Upgrade", command=self.onFlash, state="disabled", width=10)
         self.buttonFlash.grid(row=5, column=2, sticky=E + W + S + N, padx=15, pady=15)
 
@@ -205,6 +205,12 @@ class FloowerUpgrader(Frame):
         else:
             t = threading.Thread(target=self.esptoolRunner, daemon=True)
             t.start()
+
+    def onHelp(self):
+        if platform == "darwin":
+            webbrowser.open_new('https://floower.io/upgrading-floower/#macos')
+        elif platform == "win32":
+            webbrowser.open_new('https://floower.io/upgrading-floower/#windows')
 
     def disableUI(self):
         self.buttonRescan["state"] = "disabled"
