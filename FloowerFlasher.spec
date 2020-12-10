@@ -35,5 +35,16 @@ app = BUNDLE(exe,
         icon='logo.icns',
         bundle_identifier='io.floower.flasher',
         info_plist={
-            'NSHighResolutionCapable': 'True'
+            'NSHighResolutionCapable': 'True',
+            'NSPrincipalClass': 'NSApplication',
+            'NSAppleScriptEnabled': False,
+            'CFBundleDocumentTypes': [
+                {
+                    'CFBundleTypeName': 'logo.icns',
+                    'CFBundleTypeIconFile': 'logo.icns',
+                    'LSItemContentTypes': ['logo.icns'],
+                    'LSHandlerRank': 'Owner'
+                    }
+                ]
+            },
         },)
