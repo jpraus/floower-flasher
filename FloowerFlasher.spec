@@ -38,13 +38,10 @@ app = BUNDLE(exe,
             'NSHighResolutionCapable': 'True',
             'NSPrincipalClass': 'NSApplication',
             'NSAppleScriptEnabled': False,
-            'CFBundleDocumentTypes': [
-                {
-                    'CFBundleTypeName': 'logo.icns',
-                    'CFBundleTypeIconFile': 'logo.icns',
-                    'LSItemContentTypes': ['logo.icns'],
-                    'LSHandlerRank': 'Owner'
-                    }
-                ]
-            },
-        },)
+            'CFBundleDocumentTypes': [{
+                'CFBundleTypeName': 'logo.icns',
+                'CFBundleTypeIconFile': 'logo.icns',
+                'LSItemContentTypes': ['logo.icns'],
+                'LSHandlerRank': 'Owner'
+            }]
+        })
